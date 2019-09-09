@@ -1,12 +1,62 @@
 <template>
-  <Layout :has_menu="false" :has_footer="false" :title="movie.titleCn" :class="{movie_detail: !show_bar}">
+  <Layout :has_menu="false" :has_footer="false" :title="movie.titleCn"
+    :class="{movie_detail: !show_bar}">
     <div class="menu" slot="bar_menu">
       <mu-menu-item title="分享" @click="shareMovie" />
       <mu-menu-item title="收藏" @click="saveMovie" />
     </div>
     <div class="page_wrap">
       <div class="page_hd" v-if="loading.movie === 'loaded'">
-        <div class="media_info_wrp">
+        <div class="media_info_wrp wap" v-if="isMobile">
+          <div class="media_info">
+            <div class="info_box">
+              <div class="info_img">
+                <img :src="movie.image" class="pos_img">
+              </div>
+              <div class="info_text">
+                <div class="title">
+                  <span>{{movie.titleCn}} ({{movie.year}})</span>
+                </div>
+                <div class="media_tags">
+                  <span class="tag" v-for="(tag, index) in movie.type" :key="index">{{tag}}</span>
+                </div>
+                <div class="en_title">{{movie.titleEn}}</div>
+                <div class="type_tag">
+                  <span>{{movie.runTime}}</span>
+                  <span>{{movie.release.date}} </span>
+                  <span>{{movie.release.location}}上映 - </span>
+                  <span v-if="movie.is3D">3D</span>
+                  <span v-if="!movie.is3D">2D</span>
+                  <span v-if="movie.isIMAX">/ IMAX</span>
+                  <span v-if="movie.isIMAX3D">/ IMAX3D</span>
+                  <span v-if="movie.isDMAX">/ 中国巨幕</span>
+                </div>
+                <div class="intro">
+                  <div class="list">
+                    <div class="item">
+                      <div class="title">导演：</div>
+                      <div class="name"><span v-for="(director, index) in movie.directors"
+                          :key="index">{{director}}</span></div>
+                    </div>
+                    <div class="item">
+                      <div class="title">演员：</div>
+                      <div class="name"><span v-for="(actor, index) in movie.actors"
+                          :key="index">{{actor}}、</span>...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="rating" v-if="movie.rating > 0"><span
+                    class="value">{{movie.rating}}</span>分</div>
+              </div>
+            </div>
+            <div class="intro_text">剧情：{{movie.content}}</div>
+          </div>
+          <div class="media_bg">
+            <div class="pos_bg" :style="`background-image: url(${movie.image})`"></div>
+          </div>
+        </div>
+        <div class="media_info_wrp" v-else>
           <div class="media_info">
             <div class="info_box">
               <div class="info_img">
@@ -16,7 +66,7 @@
                 <div class="title">
                   <span>{{movie.titleCn}} ({{movie.year}})</span>
                   <span class="media_tags">
-                    <span class="tag" v-for="tag in movie.type">{{tag}}</span>
+                    <span class="tag" v-for="(tag, index) in movie.type" :key="index">{{tag}}</span>
                   </span>
                 </div>
                 <div class="en_title">{{movie.titleEn}}</div>
@@ -34,16 +84,20 @@
                   <div class="list">
                     <div class="item">
                       <div class="title">导演：</div>
-                      <div class="name"><span v-for="director in movie.directors">{{director}}</span></div>
+                      <div class="name"><span v-for="(director, index) in movie.directors"
+                          :key="index">{{director}}</span></div>
                     </div>
                     <div class="item">
                       <div class="title">演员：</div>
-                      <div class="name"><span v-for="actor in movie.actors">{{actor}}、</span>...</div>
+                      <div class="name"><span v-for="(actor, index) in movie.actors"
+                          :key="index">{{actor}}、</span>...
+                      </div>
                     </div>
                   </div>
                   <div class="intro_text">剧情：{{movie.content}}</div>
                 </div>
-                <div class="rating" v-if="movie.rating > 0"><span class="value">{{movie.rating}}</span>分</div>
+                <div class="rating" v-if="movie.rating > 0"><span
+                    class="value">{{movie.rating}}</span>分</div>
               </div>
             </div>
           </div>
@@ -52,21 +106,23 @@
           </div>
         </div>
       </div>
-      <div class="page_bd" v-if="loading.movie === 'loaded'">
+      <div class="page_bd" :style="isMobile?'padding-top:40px;':''"
+        v-if="loading.movie === 'loaded'">
         <div class="content">
           <div class="previve">
             <div class="title">预告片：</div>
-            <div class="video_list">
-              <a href="javascript:;" v-for="video in movie.videos" style="display: inline-block">
-              <img :src="video.image" @click="changeSource(video)">
-              <p>{{video.title}}</p>
-            </a>
+            <div class="video_list" :class="{'wap':isMobile}">
+              <a href="javascript:;" v-for="(video, index) in movie.videos"
+                style="display: inline-block" :key="index">
+                <img :src="video.image" @click="changeSource(video)">
+                <p>{{video.title}}</p>
+              </a>
             </div>
           </div>
           <div class="comments_box">
             <div class="title">精选影评{{totalCount}}条</div>
             <div class="list">
-              <div class="item" v-for="comment in hot_comments_list">
+              <div class="item" v-for="(comment, index) in hot_comments_list" :key="index">
                 <div class="header_img" :style="`background-image: url(${comment.headurl})`"></div>
                 <div class="comment">
                   <div class="nickname">
@@ -77,11 +133,13 @@
                   <div class="text">{{comment.content}}</div>
                 </div>
               </div>
-              <div class="showmore" @click="jumpAllHotComments" style="text-align: right;cursor: pointer;padding: 10px;color: blue;"><span>查看全部{{totalCount}}条精选影评&gt;&gt;</span></div>
+              <div class="showmore" @click="jumpAllHotComments"
+                style="text-align: right;cursor: pointer;padding: 10px;color: blue;">
+                <span>查看全部{{totalCount}}条精选影评&gt;&gt;</span></div>
             </div>
             <div class="title">网友短评：</div>
             <div class="list">
-              <div class="item" v-for="comment in comments_list">
+              <div class="item" v-for="(comment, index) in comments_list" :key="index">
                 <div class="header_img" :style="`background-image: url(${comment.caimg})`"></div>
                 <div class="comment">
                   <div class="nickname">
@@ -93,8 +151,8 @@
               </div>
               <div class="loading_box">
                 <mu-circular-progress :size="45" v-if="loading.comments === 'loading'" />
-                <span v-if="loading.comments === 'nomore'" >加载完了哦~~</span>
-                <span v-if="loading.comments === 'empty'" >暂无数据~~</span>
+                <span v-if="loading.comments === 'nomore'">加载完了哦~~</span>
+                <span v-if="loading.comments === 'empty'">暂无数据~~</span>
               </div>
             </div>
           </div>
@@ -121,9 +179,10 @@ let _self;
 import Layout from '@/components/Layout';
 import { Toast } from 'mint-ui';
 import Store from 'storejs'
+import { browser } from '@/mUtils'
 
 export default {
-  data: function() {
+  data: function () {
     return {
       movie: {},
       current_video: {},
@@ -140,38 +199,39 @@ export default {
       totalCount: 0,
       hot_comments_list: [],
       scroller: null,
+      isMobile: browser.versions.mobile
     };
   },
-  created() {
+  created () {
     _self = this;
     this.getMovieDetail();
     this.$nextTick(() => {
       this.initScrollDom();
     });
   },
-  activated() {
+  activated () {
     // this.resetData()
     // this.getMovieDetail();
   },
   methods: {
-    resetData() {
+    resetData () {
       this.movie = {};
       this.current_video = {};
     },
-    changeSource(video) {
+    changeSource (video) {
       this.showVideo = true;
       this.current_video = video;
       this.$nextTick(() => {
         this.initDplayer();
       })
     },
-    jumpAllHotComments() {
+    jumpAllHotComments () {
       this.$router.push(`/movie/HotComments/${this.$route.params.movie_id}`)
     },
-    closeVideo() {
+    closeVideo () {
       this.showVideo = false
     },
-    initDplayer() {
+    initDplayer () {
       let Dplayer_dom = this.$refs.Dplayer_dom;
       console.log(Dplayer_dom)
       this.Dplayer = new DPlayer({
@@ -199,13 +259,13 @@ export default {
         }]
       });
     },
-    getMovieDetail() {
+    getMovieDetail () {
       let params = {};
       params.movieId = this.$route.params.movie_id;
       params.ts = '201851015581118117';
       params.locationId = this.city.id;
       this.loading.movie = 'loading';
-      this.$store.dispatch('getMovieDetail', params).then(function(response) {
+      this.$store.dispatch('getMovieDetail', params).then(function (response) {
         let res = response.data;
         res && res.videoId ? res = res : res = JSON.parse(res);
         // console.log(res)
@@ -222,11 +282,11 @@ export default {
           _self.loading.movie = 'loaded';
         }
 
-      }).catch(function(err) {
+      }).catch(function (err) {
         _self.loading.movie = 'loaded';
       });
     },
-    getHotLongComments() {
+    getHotLongComments () {
       let params = {};
       params.movieId = this.$route.params.movie_id;
       params.ts = '201851015581118117';
@@ -240,17 +300,17 @@ export default {
           _self.loading.movie = 'loaded';
         }
 
-      }).catch(function(err) {
+      }).catch(function (err) {
         _self.loading.movie = 'loaded';
       });
     },
-    getMovieComments() {
+    getMovieComments () {
       let params = {};
       params.movieId = this.$route.params.movie_id;
       params.ts = '201851015581118117';
       params.pageIndex = this.pageIndex || 1;
       this.loading.comments = 'loading';
-      this.$store.dispatch('getMovieComments', params).then(function(response) {
+      this.$store.dispatch('getMovieComments', params).then(function (response) {
         let res = response.data;
         // res = JSON.parse(res);
         res && res.cts ? res = res : res = JSON.parse(res);
@@ -272,18 +332,18 @@ export default {
           _self.loading.comments = 'error';
         }
 
-      }).catch(function(err) {
+      }).catch(function (err) {
         _self.loading.comments = 'error';
       });
     },
-    loadMore() {
+    loadMore () {
       if (this.loading.comments !== 'loaded') {
         return;
       }
       this.pageIndex++;
       this.getMovieComments();
     },
-    saveHistory() {
+    saveHistory () {
       let arr = [];
       arr = Store.get('view_list');
       if (arr) {
@@ -301,7 +361,7 @@ export default {
       }
       Store.set('view_list', arr);
     },
-    saveMovie() {
+    saveMovie () {
       let arr = [];
       arr = Store.get('favorite_list');
       if (arr) {
@@ -320,7 +380,7 @@ export default {
         duration: 3000
       });
     },
-    shareMovie() {
+    shareMovie () {
       let router_path = this.$route.path;
       if (this.isCordova) {
         this.initCordovaShare();
@@ -330,10 +390,10 @@ export default {
       }
 
     },
-    close() {
+    close () {
       this.dialog = false;
     },
-    initCordovaShare() {
+    initCordovaShare () {
       let opt = {};
       opt.url = location.href;
       opt.message = `《${this.movie.titleCn}》在线观看_电视剧_美剧_免费电影在线看_2017最新电影`;
@@ -342,7 +402,7 @@ export default {
         console.log(onError);
       });
     },
-    initWebShare() {
+    initWebShare () {
       let opt = {};
       opt.url = location.href;
       opt.title = `《${this.movie.titleCn}》在线观看_电视剧_美剧_免费电影在线看_2017最新电影`;
@@ -354,7 +414,7 @@ export default {
         sosh('#soshid', opt)
       })
     },
-    initScrollDom() {
+    initScrollDom () {
       this.$el.onscroll = () => {
         var h = document.documentElement.scrollTop || document.body.scrollTop || this.$el.scrollTop;
         var scrollHeight = this.$el.scrollHeight;
@@ -370,13 +430,13 @@ export default {
     },
   },
   computed: {
-    isCordova() {
+    isCordova () {
       return this.$store.state.user.is_cordova;
     },
-    city() {
+    city () {
       return this.$store.state.user.city;
     },
-    getLoading() {
+    getLoading () {
       if (this.loading.comments === 'loading') {
         return true;
       } else {
@@ -392,9 +452,8 @@ export default {
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
-@import url('../assets/less/common.less');
+@import url("../assets/less/common.less");
 .page_wrap {
-
   margin: 0 auto;
   .page_hd {
     .media_info_wrp {
@@ -497,7 +556,7 @@ export default {
         transform: translateZ(0);
         &:after {
           display: block;
-          content: '';
+          content: "";
           height: 600px;
           width: 100%;
           position: absolute;
@@ -526,6 +585,71 @@ export default {
           filter: progid:DXImageTransform.Microsoft.Blur(PixelRadius=10, MakeShadow=false);
         }
       }
+      &.wap {
+        padding: 9px;
+        width: 100vw;
+        box-sizing: border-box;
+        .media_info {
+          top: 0;
+          width: 100%;
+          .info_box {
+            .info_img {
+              .pos_img {
+                width: 150px;
+                height: auto;
+                display: block;
+                border-radius: 4px;
+              }
+            }
+            .info_text {
+              flex: 1;
+              .media_tags {
+                display: block;
+                margin: 0;
+                .tag {
+                  font-size: 12px;
+                  display: inline-block;
+                  vertical-align: middle;
+                  margin-right: 10px;
+                  margin-top: 6px;
+                  height: 20px;
+                  padding: 0 4px;
+                  line-height: 20px;
+                  border: 1px solid #fff;
+                  border-radius: 3px;
+                }
+              }
+              .en_title {
+                margin-top: 6px;
+              }
+              .type_tag {
+                padding-top: 6px;
+              }
+              .intro .list {
+                padding-top: 6px;
+                .item {
+                  margin-bottom: 0;
+                }
+              }
+              .rating {
+                padding-top: 0;
+              }
+            }
+          }
+          .intro_text {
+            width: 100vw;
+            color: #ffffff;
+            padding-top: 6px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+          }
+        }
+        .media_bg {
+          height: 490px;
+        }
+      }
     }
   }
   .page_bd {
@@ -548,6 +672,14 @@ export default {
           height: auto;
           margin-right: 15px;
           cursor: pointer;
+        }
+        &.wap {
+          img {
+            box-sizing: border-box;
+            padding: 9px;
+            width: 100vw;
+            max-width: 100vw;
+          }
         }
       }
       .comments_box {
@@ -577,8 +709,8 @@ export default {
                 }
               }
               .comment_title {
-                  padding-bottom: 5px;
-                  font-weight: bold;
+                padding-bottom: 5px;
+                font-weight: bold;
               }
               .text {
                 line-height: 28px;
@@ -601,16 +733,16 @@ export default {
       }
     }
   }
-  .page_ft {}
+  .page_ft {
+  }
   .loading_box {
     text-align: center;
     padding-top: 40px;
   }
 }
-
 </style>
 <style scoped lang="less">
-@import url('../assets/less/common.less');
+@import url("../assets/less/common.less");
 // 响应式布局，流式布局
 // 导航栏响应式
 
@@ -619,91 +751,52 @@ export default {
 @media (min-width: @screen_mg_min) {
   .page_wrap {
     margin: 0 auto;
-    .page_bd {}
+    .page_bd {
+    }
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 /* 大屏幕（大桌面显示器，大于等于 1200px） */
 
 @media (max-width: @screen_lg_min) {
   .page_wrap {
-    .page_bd {}
+    .page_bd {
+    }
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 /* 中等屏幕（桌面显示器，大于等于 992px） */
 
 @media (max-width: @screen_md_min) {
   .page_wrap {
-    .page_bd {}
+    .page_bd {
+    }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /* 小屏幕（平板，大于等于 768px） */
 
 @media (max-width: @screen_sm_min) {
   .page_wrap {
-    .page_bd {}
+    .page_bd {
+    }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /* 小屏幕（手机，大于等于 640px） */
 
 @media (max-width: @screen_mi_min) {
   .page_wrap {
-    width: 100%!important;
-    .page_bd {}
+    width: 100% !important;
+    .page_bd {
+    }
   }
 }
-
 </style>
 <style lang="less">
 .movie_detail {
   .mu-appbar {
-    background-color: transparent!important;
+    background-color: transparent !important;
   }
 }
-
 </style>
