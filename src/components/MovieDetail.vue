@@ -531,7 +531,9 @@ export default {
                 padding-top: 15px;
                 overflow: hidden;
                 display: -webkit-box;
+                /*! autoprefixer: off */
                 -webkit-box-orient: vertical;
+                /* autoprefixer: on */
                 -webkit-line-clamp: 5;
               }
             }
@@ -603,6 +605,9 @@ export default {
             }
             .info_text {
               flex: 1;
+              .title {
+                white-space: unset;
+              }
               .media_tags {
                 display: block;
                 margin: 0;
@@ -637,12 +642,14 @@ export default {
             }
           }
           .intro_text {
-            width: 100vw;
+            width: 100%;
             color: #ffffff;
             padding-top: 6px;
             overflow: hidden;
             display: -webkit-box;
+            /*! autoprefixer: off */
             -webkit-box-orient: vertical;
+            /* autoprefixer: on */
             -webkit-line-clamp: 5;
           }
         }
